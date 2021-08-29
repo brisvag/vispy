@@ -4,7 +4,7 @@
 # Distributed under the (new) BSD License. See LICENSE.txt for more info.
 # -----------------------------------------------------------------------------
 
-# Contains code Copyright (c) 2018, Aldar Cabrelles. Distributed under the BSD-3 License 
+# Contains code Copyright (c) 2018, Aldar Cabrelles. Distributed under the BSD-3 License
 
 """
 Speheres Visual and shader definitions.
@@ -18,8 +18,6 @@ from .visual import Visual
 
 
 vertex = """
-#version 120
-
 uniform vec3 u_light_position;
 
 attribute vec3  a_position;
@@ -31,35 +29,33 @@ varying vec4  v_eye_direction;
 varying float v_radius;
 varying vec3  v_light_direction;
 
-varying float v_depth;
 varying float v_depth_radius;
 
 void main (void) {
-    vec4 atom_pos = vec4(a_position, 1);
-    
-    // First decide where to draw this atom on screen
-    vec4 fb_pos = $visual_to_framebuffer(atom_pos);
+    vec4 pos = vec4(a_position, 1);
+
+    // First decide where to draw this sphere on screen
+    vec4 fb_pos = $visual_to_framebuffer(pos);
     gl_Position = $framebuffer_to_render(fb_pos);
-    
+
     // Measure the orientation of the framebuffer coordinate system relative
-    // to the atom
+    // to the sphere
     vec4 x = $framebuffer_to_visual(fb_pos + vec4(100, 0, 0, 0));
-    x = (x/x.w - atom_pos) / 100;
+    x = (x/x.w - pos) / 100;
     vec4 z = $framebuffer_to_visual(fb_pos + vec4(0, 0, -100, 0));
-    z = (z/z.w - atom_pos) / 100;
-    
+    z = (z/z.w - pos) / 100;
+
     // Use the x axis to measure radius in framebuffer pixels
     // (gl_PointSize uses the framebuffer coordinate system)
-    vec4 radius = $visual_to_framebuffer(atom_pos + normalize(x) * a_radius);
+    vec4 radius = $visual_to_framebuffer(pos + normalize(x) * a_radius);
     radius = radius/radius.w - fb_pos/fb_pos.w;
     gl_PointSize = length(radius);
-    
+
     // Use the z axis to measure position and radius in the depth buffer
-    v_depth = gl_Position.z / gl_Position.w;
     // gl_FragDepth uses the "render" coordinate system.
-    vec4 depth_z = $framebuffer_to_render($visual_to_framebuffer(atom_pos + normalize(z) * a_radius));
-    v_depth_radius = v_depth - depth_z.z / depth_z.w;
-    
+    vec4 depth_z = $framebuffer_to_render($visual_to_framebuffer(pos + normalize(z) * a_radius));
+    v_depth_radius = gl_Position.z / gl_Position.w - depth_z.z / depth_z.w;
+
     v_light_direction = normalize(u_light_position);
     v_radius = a_radius;
     v_color = a_color;
@@ -67,17 +63,14 @@ void main (void) {
 """
 
 fragment = """
-#version 120
-
 varying vec3  v_color;
 varying float v_radius;
 varying vec3  v_light_direction;
-varying float v_depth;
 varying float v_depth_radius;
 
 void main()
 {
-    // calculate xyz position of this fragment relative to radius
+    // calculate xyz position of this fragment relative to the center
     vec2 texcoord = gl_PointCoord * 2.0 - vec2(1.0);
     float x = texcoord.x;
     float y = texcoord.y;
@@ -86,7 +79,7 @@ void main()
         discard;
     float z = sqrt(d);
     vec3 normal = vec3(x,y,z);
-    
+
     // Diffuse color
     float ambient = 0.3;
     float diffuse = dot(v_light_direction, normal);
@@ -105,16 +98,16 @@ void main()
     // small factor for spread
     specular = pow(specular, 80);
     vec3 specular_color = light_color * specular;
-    
+
     gl_FragColor = vec4(v_color * diffuse_color + specular_color, 1);
-    gl_FragDepth = v_depth - .5 * z * v_depth_radius;
+    gl_FragDepth = gl_FragCoord.z - .5 * z * v_depth_radius;
 }
 """
 
 
-class SpheresVisual(Visual):
+class PseudoSpheresVisual(Visual):
     """Visual that draws many spheres.
-    
+
     Parameters
     ----------
     pos: array
@@ -128,16 +121,16 @@ class SpheresVisual(Visual):
         Visual.__init__(self, vertex, fragment)
         self._data = None
 
-        self.shared_program['u_light_position'] = 5., -5., 5.        
-        #Loading data and type
+        self.shared_program['u_light_position'] = 5., -5., 5.
+        # Loading data and type
         self._draw_mode = 'points'
-        self.set_gl_state('translucent', depth_test=True, cull_face=False)        
-    
+        self.set_gl_state('translucent', depth_test=True, cull_face=True)
+
         self.set_data(pos=pos, color=color, size=size)
 
     def set_data(self, pos=None, color='white', size=10):
         """Set spheres data.
-        
+
         Parameters
         ----------
         pos: array
@@ -145,16 +138,15 @@ class SpheresVisual(Visual):
         color: array
             Array of colors.
         size: array
-            Array of the radius for each sphere.
+            Array of radii.
         """
         if pos is not None:
-            assert (isinstance(pos, np.ndarray) and
-                    pos.ndim == 2 and pos.shape[1] in (2, 3))
-            
+            assert (isinstance(pos, np.ndarray) and pos.ndim == 2 and pos.shape[1] in (2, 3))
+
             nspheres = len(pos)
             data = np.zeros(nspheres, [('a_position', np.float32, 3),
-                                ('a_color', np.float32, 4),
-                                ('a_radius', np.float32)])
+                                       ('a_color', np.float32, 4),
+                                       ('a_radius', np.float32)])
 
             color = ColorArray(color).rgba
             if len(color) == 1:
