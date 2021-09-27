@@ -4,30 +4,9 @@
 # Distributed under the (new) BSD License. See LICENSE.txt for more info.
 # -----------------------------------------------------------------------------
 # vispy: gallery 2
-
 """
-Volume Rendering
-================
-
-Example volume rendering
-
-Controls:
-
-* 1  - toggle camera between first person (fly), regular 3D (turntable) and
-       arcball
-* 2  - toggle between volume rendering methods
-* 3  - toggle between stent-CT / brain-MRI image
-* 4  - toggle between colormaps
-* 0  - reset cameras
-* [] - decrease/increase isosurface threshold
-
-With fly camera:
-
-* WASD or arrow keys - move around
-* SPACE - brake
-* FC - move up-down
-* IJKL or mouse - look around
 """
+
 
 from itertools import cycle
 
