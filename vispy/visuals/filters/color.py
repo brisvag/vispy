@@ -23,7 +23,7 @@ class IsolineFilter(Filter):
             // have to decide, which one to use or make this a uniform
             const vec3 w = vec3(0.299, 0.587, 0.114);
             //const vec3 w = vec3(0.2126, 0.7152, 0.0722);
-            float value = dot(gl_FragColor.rgb, w);
+            float value = dot($out_color.rgb, w);
 
             // setup lw, aa
             float linewidth = $isowidth + $antialias;
@@ -54,7 +54,7 @@ class IsolineFilter(Filter):
 
             // mix with background
             if (d < 1.) {
-                gl_FragColor = mix(gl_FragColor, fc, 1-d);
+                $out_color = mix($out_color, fc, 1-d);
             }
 
         }
@@ -106,11 +106,18 @@ class IsolineFilter(Filter):
         self._antialias = a
         self.fshader['antialias'] = float(a)
 
+    def _attach(self, visual):
+        super()._attach(visual)
+        try:
+            self.fshader['out_color'] = visual.shared_program.frag['out_color']
+        except KeyError:
+            pass
+
 
 class Alpha(Filter):
     FRAG_SHADER = """
         void apply_alpha() {
-            gl_FragColor.a = gl_FragColor.a * $alpha;
+            $out_color.a = $out_color.a * $alpha;
         }
     """
 
@@ -128,11 +135,19 @@ class Alpha(Filter):
         self._alpha = a
         self.fshader['alpha'] = float(a)
 
+    def _attach(self, visual):
+        super()._attach(visual)
+        try:
+            self.fshader['out_color'] = visual.shared_program.frag['out_color']
+        except KeyError:
+            print(visual)
+            pass
+
 
 class ColorFilter(Filter):
     FRAG_SHADER = """
         void apply_color_filter() {
-            gl_FragColor = gl_FragColor * $filter;
+            $out_color = $out_color * $filter;
         }
     """
 
@@ -150,6 +165,13 @@ class ColorFilter(Filter):
         self._filter = tuple(f)
         self.fshader['filter'] = self._filter
 
+    def _attach(self, visual):
+        super()._attach(visual)
+        try:
+            self.fshader['out_color'] = visual.shared_program.frag['out_color']
+        except KeyError:
+            pass
+
 
 class ZColormapFilter(Filter):
     FRAG_SHADER = """
@@ -159,7 +181,7 @@ class ZColormapFilter(Filter):
     """
     VERT_SHADER = """
         void apply_z_colormap() {
-            gl_FragColor = $cmap(($zval - $zrange.x) /
+            $out_color = $cmap(($zval - $zrange.x) /
                                  ($zrange.y - $zrange.x));
         }
     """
@@ -179,3 +201,7 @@ class ZColormapFilter(Filter):
     def _attach(self, visual):
         super(ZColormapFilter, self)._attach(visual)
         self.vshader['position'] = visual.shared_program.vert['position']
+        try:
+            self.fshader['out_color'] = visual.shared_program.frag['out_color']
+        except KeyError:
+            pass

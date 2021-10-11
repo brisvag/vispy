@@ -91,7 +91,7 @@ import numpy as np
 from .. import gloo
 from ..util.event import EmitterGroup, Event
 from ..util import logger, Frozen
-from .shaders import StatementList, MultiProgram
+from .shaders import StatementList, MultiProgram, Variable
 from .transforms import TransformSystem
 
 

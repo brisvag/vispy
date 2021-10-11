@@ -4,7 +4,7 @@
 import numpy as np
 from .shader_object import ShaderObject
 
-VARIABLE_TYPES = ('const', 'uniform', 'attribute', 'varying', 'inout')
+VARIABLE_TYPES = ('const', 'uniform', 'attribute', 'varying', 'inout', 'in', 'out')
 
 
 class Variable(ShaderObject):
@@ -26,8 +26,7 @@ class Variable(ShaderObject):
         The data type of the variable, e.g. 'float', 'vec4', 'mat', etc.
     """
 
-    _vtype_32_conversion = {'in': 'attribute', 'out': 'varying'}
-    _vtype_23_conversion = {'attribute': 'in', 'varying': 'out'}
+    _varying_conversion = {'vertex': 'out', 'fragment': 'in'}
 
     def __init__(self, name, value=None, vtype=None, dtype=None):
         super(Variable, self).__init__()
@@ -49,7 +48,7 @@ class Variable(ShaderObject):
 
         self._state_counter = 0
         self._name = name
-        self._vtype = self._vtype_32_conversion.get(vtype, vtype)
+        self._vtype = vtype
         self._dtype = dtype
         self._value = None
 
@@ -161,13 +160,12 @@ class Variable(ShaderObject):
     def expression(self, names):
         return names[self]
 
-    def _vtype_for_version(self, version):
+    def _vtype_for_version(self, version, shader_type):
         """Return the vtype for this variable, converted based on the GLSL version."""
         vtype = self.vtype
-        if version is None or version[0] == 120:
-            return self._vtype_32_conversion.get(vtype, vtype)
-        else:
-            return self._vtype_23_conversion.get(vtype, vtype)
+        if self.vtype == 'varying':
+            return self._varying_conversion.get(shader_type, vtype)
+        return vtype
 
     def definition(self, names, version, shader):
         if self.vtype is None:
@@ -176,7 +174,7 @@ class Variable(ShaderObject):
             raise RuntimeError("Variable has no dtype: %r" % self)
 
         name = names[self]
-        vtype = self._vtype_for_version(version)
+        vtype = self._vtype_for_version(version, shader.shader_type)
         if vtype == 'const':
             return '%s %s %s = %s;' % (vtype, self.dtype, name, self.value)
         else:

@@ -167,7 +167,10 @@ class FrameBuffer(GLObject):
 
     @color_buffer.setter
     def color_buffer(self, buffer):
-        self._set_buffer(buffer, 'color')
+        if not isinstance(buffer, (list, tuple)):
+            buffer = [buffer]
+        for buf in buffer:
+            self._set_buffer(buf, 'color')
 
     @property
     def depth_buffer(self):

@@ -18,9 +18,9 @@ class PickingFilter(Filter):
         void picking_filter() {
             if( $enabled == 0 )
                 return;
-            if( gl_FragColor.a == 0.0 )
+            if( $out_color.a == 0.0 )
                 discard;
-            gl_FragColor = $id_color;
+            $out_color = $id_color;
         }
     """
 
@@ -58,3 +58,10 @@ class PickingFilter(Filter):
         that use this filter.
         """
         return self._id_color
+
+    def _attach(self, visual):
+        super()._attach(visual)
+        try:
+            self.fshader['out_color'] = visual.shared_program.frag['out_color']
+        except KeyError:
+            pass
