@@ -67,12 +67,16 @@ class Renderer:
         self.out_color = Variable('out vec4 out_color')
         self.ssao_prog.frag['out_color'] = self.out_color
 
-        self.framebuffer = FrameBuffer()
-        self.framebuffer.color_buffer = [self.color_texture, self.normal_depth_texture]
+        self.depth_buffer = RenderBuffer((height, width), 'depth')
+        self.framebuffer = FrameBuffer(
+            color=self.color_texture, #self.normal_depth_texture],
+            depth=self.depth_buffer
+        )
 
     def resize(self, size):
         height_width = size[::-1]
         channels = self.color_texture.shape[2:]
+        self.depth_buffer.resize(height_width)
         self.color_texture.resize(height_width + channels)
         self.normal_depth_texture.resize(height_width + channels)
 
@@ -80,7 +84,7 @@ class Renderer:
         canvas = self.canvas
 
         offset = 0, 0
-        canvas_size = self.canvas.size
+        canvas_size = canvas.size
 
         def push_fbo():
             canvas.push_fbo(self.framebuffer, offset, canvas_size)
@@ -89,16 +93,19 @@ class Renderer:
             canvas.pop_fbo()
 
         # draw to textures
+        canvas.context.set_state(
+            depth_mask=True,
+        )
         push_fbo()
-        canvas.context.clear(color=bgcolor, depth=True)
-        self.canvas.draw_visual(canvas.scene)
+        canvas.context.clear(color=bgcolor)
+        canvas.draw_visual(canvas.scene)
         pop_fbo()
 
-        # draw on canvas back buffer
+        # # draw on canvas back buffer
         canvas.context.set_state(
-            depth_test=False,
-            blend=False,
-            depth_mask=False,
+            depth_test=True,
+            blend=True,
+            depth_mask=True,
         )
         canvas.context.clear(color=bgcolor)
         self.ssao_prog.draw('triangle_strip')
