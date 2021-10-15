@@ -157,6 +157,11 @@ void main()
         edgecolor = vec4(edgecolor.rgb * diffuse_color + specular_color, edgecolor.a * u_alpha);
         // TODO: figure out why this 0.5 is needed, despite already having the radius, not diameter
         depth_change = -0.5 * z * v_depth_middle;
+
+        $out_normal_depth.xyz = normal;
+    }
+    else {
+        $out_normal_depth.xyz = vec3(0, 0, 1);  // facing us?
     }
 
     if (d < 0.0)
@@ -195,7 +200,11 @@ void main()
     }
     float z_coord = gl_FragCoord.z + depth_change;
     gl_FragDepth = z_coord;
-    $out_normal_depth = vec4(0, 0, 0, z_coord);
+
+    $out_normal_depth.a = z_coord;
+
+    // depth debugging
+    //$out_color = vec4((z_coord - 0.4997) * 800, 0, 0, 1);
 }
 """
 

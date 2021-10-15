@@ -40,8 +40,9 @@ in vec2 v_texcoord;
 
 void main() {
     vec4 c = texture2D(tex_color, v_texcoord);
-    //vec4 d = texture2D(tex_normal_depth, v_texcoord);
-    $out_color = vec4(c);
+    vec4 d = texture2D(tex_normal_depth, v_texcoord);
+    $out_color = c;
+    //$out_color = vec4(d.rgb, 1); // does not work
     //gl_FragDepth = -1;
 }
 """
@@ -69,7 +70,7 @@ class Renderer:
 
         self.depth_buffer = RenderBuffer((height, width), 'depth')
         self.framebuffer = FrameBuffer(
-            color=self.color_texture, #self.normal_depth_texture],
+            color=[self.color_texture, self.normal_depth_texture],
             depth=self.depth_buffer
         )
 
@@ -95,13 +96,14 @@ class Renderer:
         # draw to textures
         canvas.context.set_state(
             depth_mask=True,
+            depth_test=True,
         )
         push_fbo()
         canvas.context.clear(color=bgcolor)
         canvas.draw_visual(canvas.scene)
         pop_fbo()
 
-        # # draw on canvas back buffer
+        # draw on canvas back buffer
         canvas.context.set_state(
             depth_test=True,
             blend=True,

@@ -138,9 +138,11 @@ class FrameBuffer(GLObject):
     def __exit__(self, t, val, trace):
         self.deactivate()
 
-    def _set_buffer(self, buffer, format):
+    def _set_buffer(self, buffer, format, idx=0):
         formats = ('color', 'depth', 'stencil')
         assert format in formats
+        if format != 'color' and idx != 0:
+            raise ValueError('Multiple attachments only allowed for color buffers')
         # Auto-format or check render buffer
         if isinstance(buffer, RenderBuffer):
             if buffer.format is None:
@@ -155,7 +157,7 @@ class FrameBuffer(GLObject):
         elif isinstance(buffer, (Texture2D, RenderBuffer)):
             self.glir.associate(buffer.glir)
             setattr(self, '_%s_buffer' % format, buffer)
-            self._glir.command('ATTACH', self._id, format, buffer.id)
+            self._glir.command('ATTACH', self._id, format, buffer.id, idx)
         else:
             raise TypeError("Buffer must be a RenderBuffer, Texture2D or None."
                             " (got %s)" % type(buffer))
@@ -169,8 +171,8 @@ class FrameBuffer(GLObject):
     def color_buffer(self, buffer):
         if not isinstance(buffer, (list, tuple)):
             buffer = [buffer]
-        for buf in buffer:
-            self._set_buffer(buf, 'color')
+        for idx, buf in enumerate(buffer):
+            self._set_buffer(buf, 'color', idx)
 
     @property
     def depth_buffer(self):

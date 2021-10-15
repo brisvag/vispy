@@ -281,17 +281,18 @@ ATTACH
 
 ::
 
-   ('ATTACH', <framebuffer_id>, <attachment:str>, <object>)
+   ('ATTACH', <framebuffer_id>, <attachment:str>, <object>, <optional: attachment_number>)
    ('ATTACH', <program_id>, <shader_id>)
    # Example:
-   ('ATTACH', 4, 'color', 5)
+   ('ATTACH', 4, 'color', 5, 0)
    ('ATTACH', 1, 3)
 
 Applies to: FrameBuffer, Program
 
 Attach color, depth, or stencil buffer to the framebuffer. The
 attachment argument can be 'color', 'depth' or 'stencil'. The object
-argument must be the id for a RenderBuffer or Texture2D.
+argument must be the id for a RenderBuffer or Texture2D. The
+attachment_number must be an int and allows for multiple attachments (default=0).
 For Program this attaches an existing Shader object to the program.
 
 FRAMEBUFFER
@@ -1752,8 +1753,8 @@ class GlirFrameBuffer(GlirObject):
             stack.remove(self._handle)
         gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, stack[-1])
 
-    def attach(self, attachment, buffer_id):
-        attachment = GlirFrameBuffer._formats[attachment][0]
+    def attach(self, attachment, buffer_id, attachment_number=0):
+        attachment = GlirFrameBuffer._formats[attachment][0] + attachment_number
         self.activate()
         if buffer_id == 0:
             gl.glFramebufferRenderbuffer(gl.GL_FRAMEBUFFER, attachment,
