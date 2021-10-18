@@ -3,7 +3,9 @@ Spheres and Sticks
 ==================
 """
 import numpy as np
-from vispy import app, scene
+from vispy import app, scene, gloo
+
+gloo.gl.use_gl('gl+')
 
 # Create canvas and view
 canvas = scene.SceneCanvas(keys='interactive', size=(600, 600), show=True)

@@ -608,7 +608,7 @@ class SceneCanvas(app.Canvas, Frozen):
         self._fb_stack.append((fbo, offset, csize))
         try:
             fbo.activate()
-            h, w = fbo.color_buffer.shape[:2]
+            h, w = fbo.color_buffer[0].shape[:2]
             self.push_viewport((0, 0, w, h))
         except Exception:
             self._fb_stack.pop()

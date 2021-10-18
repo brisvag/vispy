@@ -37,6 +37,7 @@ from ..util import logger
 from .util import check_enum
 from .context import get_current_canvas
 from .preprocessor import preprocess
+from ..gloo import gl
 
 
 # ------------------------------------------------------------ Shader class ---
@@ -504,6 +505,18 @@ class Program(GLObject):
 
         # Associate canvas
         canvas.context.glir.associate(self.glir)
+
+        # set render targets
+        fbo = canvas._current_framebuffer()[0]
+        if fbo:
+            nbuf = len(fbo.color_buffer)
+            if nbuf > 1:
+                canvas.context.glir.command(
+                    'FUNC',
+                    'glDrawBuffers',
+                    nbuf,
+                    [gl.GL_COLOR_ATTACHMENT0 + i for i in range(nbuf)],
+                )
 
         # Indexbuffer
         if isinstance(indices, IndexBuffer):

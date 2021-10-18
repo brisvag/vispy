@@ -106,7 +106,7 @@ class FrameBuffer(GLObject):
     def __init__(self, color=None, depth=None, stencil=None):
         GLObject.__init__(self)
         # Init buffers
-        self._color_buffer = None
+        self._color_buffer = []
         self._depth_buffer = None
         self._stencil_buffer = None
         if color is not None:
@@ -138,11 +138,9 @@ class FrameBuffer(GLObject):
     def __exit__(self, t, val, trace):
         self.deactivate()
 
-    def _set_buffer(self, buffer, format, idx=0):
-        formats = ('color', 'depth', 'stencil')
+    def _set_buffer(self, buffer, format):
+        formats = ('depth', 'stencil')
         assert format in formats
-        if format != 'color' and idx != 0:
-            raise ValueError('Multiple attachments only allowed for color buffers')
         # Auto-format or check render buffer
         if isinstance(buffer, RenderBuffer):
             if buffer.format is None:
@@ -157,7 +155,7 @@ class FrameBuffer(GLObject):
         elif isinstance(buffer, (Texture2D, RenderBuffer)):
             self.glir.associate(buffer.glir)
             setattr(self, '_%s_buffer' % format, buffer)
-            self._glir.command('ATTACH', self._id, format, buffer.id, idx)
+            self._glir.command('ATTACH', self._id, format, buffer.id)
         else:
             raise TypeError("Buffer must be a RenderBuffer, Texture2D or None."
                             " (got %s)" % type(buffer))
@@ -171,8 +169,33 @@ class FrameBuffer(GLObject):
     def color_buffer(self, buffer):
         if not isinstance(buffer, (list, tuple)):
             buffer = [buffer]
+
+        format = 'color'
+        formats = ('depth', 'stencil')
+        to_attach = []
         for idx, buf in enumerate(buffer):
-            self._set_buffer(buf, 'color', idx)
+            # Auto-format or check render buffer
+            if isinstance(buf, RenderBuffer):
+                if buf.format is None:
+                    buf.resize(buf.shape, format)
+                elif buf.format in formats:
+                    raise ValueError('Cannot attach a %s buffer as %s buffer.' %
+                                     (buf.format, format))
+            # Attach
+            if buf is None:
+                to_attach.append((None, 0, idx))
+            elif isinstance(buf, (Texture2D, RenderBuffer)):
+                self.glir.associate(buf.glir)
+                to_attach.append((buf, buf.id, idx))
+            else:
+                raise TypeError("Buffer must be a RenderBuffer, Texture2D or None."
+                                " (got %s)" % type(buf))
+
+        self._color_buffer = []
+        for buf, buf_id, idx in to_attach:
+            if buf is not None:
+                self._color_buffer.append(buf)
+            self._glir.command('ATTACH', self._id, format, buf_id, idx)
 
     @property
     def depth_buffer(self):

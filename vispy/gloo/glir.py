@@ -1280,6 +1280,7 @@ class GlirProgram(GlirObject):
                 gl.glBindBuffer(gl.GL_ARRAY_BUFFER, 0)
                 gl.glDisableVertexAttribArray(attr_handle)
                 func(attr_handle, *args)
+
         # Validate. We need to validate after textures units get assigned
         if not self._validated:
             self._validated = True
@@ -1327,7 +1328,6 @@ class GlirProgram(GlirObject):
                                    " Try gloo.gl.use_gl('gl+').")
             raise
 
-        # Draw
         if len(selection) == 3:
             # Selection based on indices
             id_, gtype, count = selection

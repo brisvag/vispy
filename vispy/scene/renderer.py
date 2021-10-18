@@ -42,8 +42,8 @@ void main() {
     vec4 c = texture2D(tex_color, v_texcoord);
     vec4 d = texture2D(tex_normal_depth, v_texcoord);
     $out_color = c;
-    //$out_color = vec4(d.rgb, 1); // does not work
-    //gl_FragDepth = -1;
+    $out_color = vec4(d.rgb);
+    // gl_FragDepth = d.a;
 }
 """
 
