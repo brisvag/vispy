@@ -508,15 +508,14 @@ class Program(GLObject):
 
         # set render targets
         fbo = canvas._current_framebuffer()[0]
-        if fbo:
+        if fbo and gl.current_backend == 'gl+':
             nbuf = len(fbo.color_buffer)
-            if nbuf > 1:
-                canvas.context.glir.command(
-                    'FUNC',
-                    'glDrawBuffers',
-                    nbuf,
-                    [gl.GL_COLOR_ATTACHMENT0 + i for i in range(nbuf)],
-                )
+            canvas.context.glir.command(
+                'FUNC',
+                'glDrawBuffers',
+                nbuf,
+                [gl.GL_COLOR_ATTACHMENT0 + i for i in range(nbuf)],
+            )
 
         # Indexbuffer
         if isinstance(indices, IndexBuffer):
