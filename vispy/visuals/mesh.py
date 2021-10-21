@@ -33,9 +33,12 @@ in vec4 v_base_color;
 
 void main() {
     $out_color = v_base_color;
+    float depth = gl_FragCoord.z;
+    gl_FragDepth = depth;
+    $out_normal_depth.a = depth;
+    //$out_color = vec4(depth, 0, 0, 1);
 }
 """
-
 
 # Functions that can be used as is (don't have template variables)
 # Consider these stored in a central location in vispy ...

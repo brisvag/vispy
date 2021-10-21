@@ -25,8 +25,17 @@ class Variable(ShaderObject):
     dtype : str
         The data type of the variable, e.g. 'float', 'vec4', 'mat', etc.
     """
-
-    _varying_conversion = {'vertex': 'out', 'fragment': 'in'}
+    _conversion_2_to_3 = {
+        'vertex': {
+            'attribute': 'in',
+            'varying': 'out',
+        },
+        'fragment': {
+            'varying': 'in',
+        },
+        'geometry': {},
+    }
+    _conversion_3_to_2 = {sh: {v: k for k, v in conv.items()} for sh, conv in _conversion_2_to_3.items()}
 
     def __init__(self, name, value=None, vtype=None, dtype=None):
         super(Variable, self).__init__()
@@ -163,8 +172,10 @@ class Variable(ShaderObject):
     def _vtype_for_version(self, version, shader_type):
         """Return the vtype for this variable, converted based on the GLSL version."""
         vtype = self.vtype
-        if self.vtype == 'varying':
-            return self._varying_conversion.get(shader_type, vtype)
+        if version is None or version[0] == 120:
+            vtype = self._conversion_3_to_2[shader_type].get(vtype, vtype)
+        else:
+            vtype = self._conversion_2_to_3[shader_type].get(vtype, vtype)
         return vtype
 
     def definition(self, names, version, shader):

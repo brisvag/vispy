@@ -654,11 +654,6 @@ class MarkersVisual(Visual):
         self.alpha = alpha
         self.spherical = spherical
 
-        self._out_color = Variable('out vec4 out_color')
-        self.shared_program.frag['out_color'] = self._out_color
-        self._out_normal_depth = Variable('out vec4 out_normal_depth')
-        self.shared_program.frag['out_normal_depth'] = self._out_normal_depth
-
         self.freeze()
 
     def set_data(self, pos=None, size=10., edge_width=1., edge_width_rel=None,

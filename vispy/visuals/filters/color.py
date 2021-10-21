@@ -106,13 +106,6 @@ class IsolineFilter(Filter):
         self._antialias = a
         self.fshader['antialias'] = float(a)
 
-    def _attach(self, visual):
-        super()._attach(visual)
-        try:
-            self.fshader['out_color'] = visual.shared_program.frag['out_color']
-        except KeyError:
-            pass
-
 
 class Alpha(Filter):
     FRAG_SHADER = """
@@ -135,14 +128,6 @@ class Alpha(Filter):
         self._alpha = a
         self.fshader['alpha'] = float(a)
 
-    def _attach(self, visual):
-        super()._attach(visual)
-        try:
-            self.fshader['out_color'] = visual.shared_program.frag['out_color']
-        except KeyError:
-            print(visual)
-            pass
-
 
 class ColorFilter(Filter):
     FRAG_SHADER = """
@@ -164,13 +149,6 @@ class ColorFilter(Filter):
     def filter(self, f):
         self._filter = tuple(f)
         self.fshader['filter'] = self._filter
-
-    def _attach(self, visual):
-        super()._attach(visual)
-        try:
-            self.fshader['out_color'] = visual.shared_program.frag['out_color']
-        except KeyError:
-            pass
 
 
 class ZColormapFilter(Filter):
@@ -201,7 +179,3 @@ class ZColormapFilter(Filter):
     def _attach(self, visual):
         super(ZColormapFilter, self)._attach(visual)
         self.vshader['position'] = visual.shared_program.vert['position']
-        try:
-            self.fshader['out_color'] = visual.shared_program.frag['out_color']
-        except KeyError:
-            pass

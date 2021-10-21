@@ -99,6 +99,12 @@ class Filter(BaseFilter):
             hook = visual._get_hook('frag', self._fhook)
             hook.add(self._fexpr, position=self._fpos)
 
+        # attach to output color
+        try:
+            self.fshader['out_color'] = visual.shared_program.frag['out_color']
+        except KeyError:
+            pass
+
         self._attached = True
         self._visual = visual
 

@@ -37,14 +37,14 @@ vis = scene.visuals.Markers(
 )
 vis.parent = view.scene
 
-# lines = np.array([[data[i], data[-1]]
-                  # for i in range(len(data) - 1)])
-# line_vis = []
+lines = np.array([[data[i], data[-1]]
+                  for i in range(len(data) - 1)])
+line_vis = []
 
-# for line in lines:
-    # vis2 = scene.visuals.Tube(line, radius=5)
-    # vis2.parent = view.scene
-    # line_vis.append(vis2)
+for line in lines:
+    vis2 = scene.visuals.Tube(line, radius=5)
+    vis2.parent = view.scene
+    line_vis.append(vis2)
 
 if __name__ == "__main__":
     app.run()

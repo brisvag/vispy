@@ -95,6 +95,7 @@ void main(void) {
 
    vec4 color  = texture2D(tex_color, v_texcoord);
    $out_color = vec4(color.rgb * ao, color.a);
+   //$out_color = vec4(depth, 0, 0, 1);
 }
 """
 
@@ -112,7 +113,7 @@ uniform float strength;
 in vec2 v_texcoord;
 
 void main(void) {
-   vec4 color = texture2D(tex_normal_depth, v_texcoord);
+   vec4 color = texture2D(tex_color, v_texcoord);
    $out_color = color;
 }
 """
@@ -144,13 +145,14 @@ class Renderer:
             depth=self.depth_buffer
         )
 
-        self.noise = np.random.uniform(0, 1, (256, 256, 3)).astype(np.float32)
-        self.ssao_prog['tex_noise'] = self.noise
+        self.noise_texture = Texture2D((height, width, 4), format='rgba')
+        self.noise_texture.set_data(np.random.uniform(0, 1, (height, width, 4)).astype(np.float32))
+        self.ssao_prog['tex_noise'] = self.noise_texture
 
         self.ssao_prog['base'] = 1.00
-        self.ssao_prog['strength'] = 0.20
+        self.ssao_prog['strength'] = 0.5
         self.ssao_prog['falloff'] = 0.000002
-        self.ssao_prog['radius'] = 0.01
+        self.ssao_prog['radius'] = 0.02
 
     def resize(self, size):
         height_width = size[::-1]
@@ -158,6 +160,7 @@ class Renderer:
         self.depth_buffer.resize(height_width)
         self.color_texture.resize(height_width + channels)
         self.normal_depth_texture.resize(height_width + channels)
+        self.noise_texture.resize(height_width + channels)
 
     def render(self, bgcolor):
         canvas = self.canvas
