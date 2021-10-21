@@ -1719,7 +1719,7 @@ class GlirFrameBuffer(GlirObject):
 
     # todo: on ES 2.0 -> gl.gl_RGBA4
     _formats = {'color': (gl.GL_COLOR_ATTACHMENT0, gl.GL_RGBA),
-                'depth': (gl.GL_DEPTH_ATTACHMENT, gl.GL_DEPTH_COMPONENT16),
+                'depth': (gl.GL_DEPTH_ATTACHMENT, gl.GL_DEPTH_COMPONENT),
                 'stencil': (gl.GL_STENCIL_ATTACHMENT, gl.GL_STENCIL_INDEX8)}
 
     def create(self):

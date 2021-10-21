@@ -60,18 +60,19 @@ void main(void) {
       vec3( 0.0352,-0.0631, 0.5460), vec3(-0.4776, 0.2847,-0.0271) );
 
    // grab a normal for reflecting the sample rays later on
-   vec3 fres = normalize(texture2D(tex_noise, v_texcoord).xyz*2.0 - 1.0);
    vec4 norm_depth = texture2D(tex_normal_depth, v_texcoord);
    vec3 normal = norm_depth.rgb;
    float depth = norm_depth.a;
 
    // current fragment coords in screen space
+   vec3 fres = normalize(texture2D(tex_noise, v_texcoord).xyz*2.0 - 1.0);
    vec3 ep = vec3(v_texcoord, depth);
    float bl = 0.0;
    // adjust for the depth ( not shure if this is good..)
    float radD = radius / depth;
    vec3 ray, se, occNorm;
    float occluderDepth, depthDifference, normDiff;
+
    for(int i=0; i<samples; i++)
    {
       // Get a random vector inside the unit sphere
@@ -93,7 +94,7 @@ void main(void) {
    float ao = 1.0 - base*bl/16;
 
    vec4 color  = texture2D(tex_color, v_texcoord);
-   $out_color = vec4(ao, 0, 0, color.a);
+   $out_color = vec4(color.rgb * ao, color.a);
 }
 """
 
@@ -111,7 +112,7 @@ uniform float strength;
 in vec2 v_texcoord;
 
 void main(void) {
-   vec4 color = texture2D(tex_color, v_texcoord);
+   vec4 color = texture2D(tex_normal_depth, v_texcoord);
    $out_color = color;
 }
 """
@@ -176,7 +177,7 @@ class Renderer:
             depth_test=True,
         )
         push_fbo()
-        canvas.context.clear(color=bgcolor)
+        canvas.context.clear(color=bgcolor, depth=True)
         canvas.draw_visual(canvas.scene)
         pop_fbo()
 
@@ -186,5 +187,5 @@ class Renderer:
             # blend=True,
             # depth_mask=True,
         # )
-        # canvas.context.clear(color=bgcolor)
+        # canvas.context.clear()
         self.ssao_prog.draw('triangle_strip')

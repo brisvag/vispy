@@ -508,7 +508,8 @@ class Program(GLObject):
 
         # set render targets
         fbo = canvas._current_framebuffer()[0]
-        if fbo and gl.current_backend == 'gl+':
+
+        if fbo and 'glplus' in gl.current_backend.__name__:
             nbuf = len(fbo.color_buffer)
             canvas.context.glir.command(
                 'FUNC',
