@@ -16,7 +16,7 @@ def test_multiprogram():
 
     frag = """
     void main() {
-        gl_FragColor = $color;
+        $out_color = $color;
         $post_hook
     }
     """
@@ -48,7 +48,7 @@ def test_multiprogram():
     # test setting template variables per-program
     func = Function("""
     void filter() {
-        gl_FragColor.r = 0.5;
+        $out_color.r = 0.5;
     }
     """)
     p1.frag['post_hook'] = StatementList()

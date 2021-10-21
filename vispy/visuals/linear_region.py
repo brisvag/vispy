@@ -30,7 +30,7 @@ FRAG_SHADER = """
     varying vec4 v_color;
 
     void main() {
-        gl_FragColor = v_color;
+        $out_color = v_color;
     }
     """
 

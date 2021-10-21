@@ -57,7 +57,7 @@ void main() {
 
 FRAG_SHADER_BORDER = """
 void main() {
-    gl_FragColor = $border_color;
+    $out_color = $border_color;
 }
 """  # noqa
 

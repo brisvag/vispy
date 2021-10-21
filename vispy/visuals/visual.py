@@ -345,7 +345,10 @@ class Visual(BaseVisual):
         self._out_color = Variable('out vec4 out_color')
         self.shared_program.frag['out_color'] = self._out_color
         self._out_normal_depth = Variable('out vec4 out_normal_depth')
-        self.shared_program.frag['out_normal_depth'] = self._out_normal_depth
+        try:
+            self.shared_program.frag['out_normal_depth'] = self._out_normal_depth
+        except KeyError:
+            pass
 
 
     def set_gl_state(self, preset=None, **kwargs):

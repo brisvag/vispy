@@ -51,15 +51,15 @@ import numpy as np
 
 
 # Vertex shader
-VERT_SHADER = """
+VERT_SHADER = """#version 450
 attribute vec3 a_position;
 // attribute vec3 a_texcoord;
 uniform vec3 u_shape;
 
-// varying vec3 v_texcoord;
-varying vec3 v_position;
-varying vec4 v_nearpos;
-varying vec4 v_farpos;
+// out vec3 v_texcoord;
+out vec3 v_position;
+out vec4 v_nearpos;
+out vec4 v_farpos;
 
 void main() {
     // v_texcoord = a_texcoord;
@@ -82,7 +82,7 @@ void main() {
 """  # noqa
 
 # Fragment shader
-FRAG_SHADER = """
+FRAG_SHADER = """#version 450
 // uniforms
 uniform $sampler_type u_volumetex;
 uniform vec3 u_shape;
@@ -92,11 +92,11 @@ uniform float u_threshold;
 uniform float u_attenuation;
 uniform float u_relative_step_size;
 
-//varyings
-// varying vec3 v_texcoord;
-varying vec3 v_position;
-varying vec4 v_nearpos;
-varying vec4 v_farpos;
+//ins
+// in vec3 v_texcoord;
+in vec3 v_position;
+in vec4 v_nearpos;
+in vec4 v_farpos;
 
 // uniforms for lighting. Hard coded until we figure out how to do lights
 const vec4 u_ambient = vec4(0.2, 0.2, 0.2, 1.0);
@@ -109,7 +109,7 @@ uniform vec3 u_plane_normal;
 uniform vec3 u_plane_position;
 uniform float u_plane_thickness;
 
-//varying vec3 lightDirs[1];
+//in vec3 lightDirs[1];
 
 // global holding view direction in local coordinates
 vec3 view_ray;
@@ -245,7 +245,7 @@ void main() {
 
     // For testing: show the number of steps. This helps to establish
     // whether the rays are correctly oriented
-    //gl_FragColor = vec4(0.0, f_nsteps / 3.0 / u_shape.x, 1.0, 1.0);
+    //$out_color = vec4(0.0, f_nsteps / 3.0 / u_shape.x, 1.0, 1.0);
     //return;
 
     $before_loop
@@ -384,7 +384,7 @@ MIP_SNIPPETS = dict(
                 maxval = max(maxval, $sample(u_volumetex, loc).r);
                 loc += step * 0.1;
             }
-            gl_FragColor = applyColormap(maxval);
+            $out_color = applyColormap(maxval);
         }
         """,
 )
@@ -407,7 +407,7 @@ ATTENUATED_MIP_SNIPPETS = dict(
         }
         """,
     after_loop="""
-        gl_FragColor = applyColormap(maxval);
+        $out_color = applyColormap(maxval);
         """,
 )
 
@@ -430,7 +430,7 @@ MINIP_SNIPPETS = dict(
                 minval = min(minval, $sample(u_volumetex, loc).r);
                 loc += step * 0.1;
             }
-            gl_FragColor = applyColormap(minval);
+            $out_color = applyColormap(minval);
         }
         """,
 )
@@ -460,7 +460,7 @@ TRANSLUCENT_SNIPPETS = dict(
             }
         """,
     after_loop="""
-        gl_FragColor = integrated_color;
+        $out_color = integrated_color;
         """,
 )
 
@@ -474,7 +474,7 @@ ADDITIVE_SNIPPETS = dict(
         integrated_color = 1.0 - (1.0 - integrated_color) * (1.0 - color);
         """,
     after_loop="""
-        gl_FragColor = integrated_color;
+        $out_color = integrated_color;
         """,
 )
 
@@ -482,7 +482,7 @@ ISO_SNIPPETS = dict(
     before_loop="""
         vec4 color3 = vec4(0.0);  // final color
         vec3 dstep = 1.5 / u_shape;  // step to sample derivative
-        gl_FragColor = vec4(0.0);
+        $out_color = vec4(0.0);
     """,
     in_loop="""
         if (val > u_threshold-0.2) {
@@ -492,7 +492,7 @@ ISO_SNIPPETS = dict(
                 color = $sample(u_volumetex, iloc);
                 if (color.r > u_threshold) {
                     color = calculateColor(color, iloc, dstep);
-                    gl_FragColor = applyColormap(color.r);
+                    $out_color = applyColormap(color.r);
 
                     // set the variables for the depth buffer                            
                     surface_point = iloc * u_shape;
@@ -529,7 +529,7 @@ AVG_SNIPPETS = dict(
         """,
     after_loop="""
         // Apply colormap on mean value
-        gl_FragColor = applyColormap(meanval);
+        $out_color = applyColormap(meanval);
         """,
 )
 
@@ -971,6 +971,10 @@ class VolumeVisual(Visual):
         self.shared_program.frag['sample'] = self._texture.glsl_sample
         self.shared_program.frag['cmap'] = Function(self._cmap.glsl_map)
         self.shared_program['texture2D_LUT'] = self.cmap.texture_lut()
+
+        # need update after snippet change
+        self.shared_program.frag['out_color'] = None
+        self.shared_program.frag['out_color'] = self._out_color
         self.update()
 
     @property

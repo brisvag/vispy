@@ -393,7 +393,7 @@ class TextVisual(Visual):
                 alpha = (alpha + 0.5 * asum) / 3.0;
             }
 
-            gl_FragColor = vec4(v_color.rgb, v_color.a * alpha);
+            $out_color = vec4(v_color.rgb, v_color.a * alpha);
         }
         """
 
