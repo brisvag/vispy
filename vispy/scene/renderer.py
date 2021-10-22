@@ -129,7 +129,7 @@ class Renderer:
         self.screen_vertices = [(-1, -1), (1, -1), (-1, 1), (1, 1)]
 
         # ambient_occlusion
-        self.ssao_prog = ModularProgram(vcode=vert_ssao, fcode=copy_frag)
+        self.ssao_prog = ModularProgram(vcode=vert_ssao, fcode=frag_ssao)
         self.ssao_prog['a_position'] = self.screen_vertices
         self.color_texture = Texture2D((height, width, 4), format='rgba')
         self.ssao_prog['tex_color'] = self.color_texture
