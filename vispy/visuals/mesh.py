@@ -11,7 +11,7 @@ from __future__ import division
 import numpy as np
 
 from .visual import Visual
-from .shaders import Function, FunctionChain
+from .shaders import Function, FunctionChain, Variable
 from ..gloo import VertexBuffer
 from ..geometry import MeshData
 from ..color import Color, get_colormap
@@ -19,8 +19,8 @@ from ..color.colormap import CubeHelixColormap
 from ..util.event import Event
 
 
-vertex_template = """
-varying vec4 v_base_color;
+vertex_template = """#version 450
+out vec4 v_base_color;
 
 void main() {
     v_base_color = $color_transform($base_color);
@@ -28,13 +28,17 @@ void main() {
 }
 """
 
-fragment_template = """
-varying vec4 v_base_color;
+fragment_template = """#version 450
+in vec4 v_base_color;
+
 void main() {
-    gl_FragColor = v_base_color;
+    $out_color = v_base_color;
+    float depth = gl_FragCoord.z;
+    gl_FragDepth = depth;
+    $out_normal_depth.a = depth;
+    //$out_color = vec4(depth, 0, 0, 1);
 }
 """
-
 
 # Functions that can be used as is (don't have template variables)
 # Consider these stored in a central location in vispy ...
@@ -157,6 +161,9 @@ class MeshVisual(Visual):
 
         # primitive mode
         self._draw_mode = mode
+
+        self._out_color = Variable('out vec4 out_color')
+        self.shared_program.frag['out_color'] = self._out_color
 
         self.freeze()
 

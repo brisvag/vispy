@@ -23,7 +23,7 @@ class IsolineFilter(Filter):
             // have to decide, which one to use or make this a uniform
             const vec3 w = vec3(0.299, 0.587, 0.114);
             //const vec3 w = vec3(0.2126, 0.7152, 0.0722);
-            float value = dot(gl_FragColor.rgb, w);
+            float value = dot($out_color.rgb, w);
 
             // setup lw, aa
             float linewidth = $isowidth + $antialias;
@@ -54,7 +54,7 @@ class IsolineFilter(Filter):
 
             // mix with background
             if (d < 1.) {
-                gl_FragColor = mix(gl_FragColor, fc, 1-d);
+                $out_color = mix($out_color, fc, 1-d);
             }
 
         }
@@ -110,7 +110,7 @@ class IsolineFilter(Filter):
 class Alpha(Filter):
     FRAG_SHADER = """
         void apply_alpha() {
-            gl_FragColor.a = gl_FragColor.a * $alpha;
+            $out_color.a = $out_color.a * $alpha;
         }
     """
 
@@ -132,7 +132,7 @@ class Alpha(Filter):
 class ColorFilter(Filter):
     FRAG_SHADER = """
         void apply_color_filter() {
-            gl_FragColor = gl_FragColor * $filter;
+            $out_color = $out_color * $filter;
         }
     """
 
@@ -159,7 +159,7 @@ class ZColormapFilter(Filter):
     """
     VERT_SHADER = """
         void apply_z_colormap() {
-            gl_FragColor = $cmap(($zval - $zrange.x) /
+            $out_color = $cmap(($zval - $zrange.x) /
                                  ($zrange.y - $zrange.x));
         }
     """

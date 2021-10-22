@@ -604,7 +604,7 @@ class Texture3D(BaseTexture):
     @property
     def glsl_sample(self):
         """GLSL function that samples the texture."""
-        return 'texture3D'
+        return 'texture'
 
 
 # --------------------------------------------------------- TextureCube class ---

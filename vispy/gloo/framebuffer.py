@@ -106,7 +106,7 @@ class FrameBuffer(GLObject):
     def __init__(self, color=None, depth=None, stencil=None):
         GLObject.__init__(self)
         # Init buffers
-        self._color_buffer = None
+        self._color_buffer = []
         self._depth_buffer = None
         self._stencil_buffer = None
         if color is not None:
@@ -139,7 +139,7 @@ class FrameBuffer(GLObject):
         self.deactivate()
 
     def _set_buffer(self, buffer, format):
-        formats = ('color', 'depth', 'stencil')
+        formats = ('depth', 'stencil')
         assert format in formats
         # Auto-format or check render buffer
         if isinstance(buffer, RenderBuffer):
@@ -167,7 +167,35 @@ class FrameBuffer(GLObject):
 
     @color_buffer.setter
     def color_buffer(self, buffer):
-        self._set_buffer(buffer, 'color')
+        if not isinstance(buffer, (list, tuple)):
+            buffer = [buffer]
+
+        format = 'color'
+        formats = ('depth', 'stencil')
+        to_attach = []
+        for idx, buf in enumerate(buffer):
+            # Auto-format or check render buffer
+            if isinstance(buf, RenderBuffer):
+                if buf.format is None:
+                    buf.resize(buf.shape, format)
+                elif buf.format in formats:
+                    raise ValueError('Cannot attach a %s buffer as %s buffer.' %
+                                     (buf.format, format))
+            # Attach
+            if buf is None:
+                to_attach.append((None, 0, idx))
+            elif isinstance(buf, (Texture2D, RenderBuffer)):
+                self.glir.associate(buf.glir)
+                to_attach.append((buf, buf.id, idx))
+            else:
+                raise TypeError("Buffer must be a RenderBuffer, Texture2D or None."
+                                " (got %s)" % type(buf))
+
+        self._color_buffer = []
+        for buf, buf_id, idx in to_attach:
+            if buf is not None:
+                self._color_buffer.append(buf)
+            self._glir.command('ATTACH', self._id, format, buf_id, idx)
 
     @property
     def depth_buffer(self):

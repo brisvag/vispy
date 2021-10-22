@@ -13,12 +13,13 @@ Show mesh filter usage for shading (lighting) a mesh and displaying a wireframe.
 
 import argparse
 
-from vispy import app, scene
+from vispy import app, scene, gloo
 from vispy.io import read_mesh, load_data_file
 from vispy.scene.visuals import Mesh
 from vispy.scene import transforms
 from vispy.visuals.filters import ShadingFilter, WireframeFilter
 
+gloo.gl.use_gl('gl+')
 
 parser = argparse.ArgumentParser()
 default_mesh = load_data_file('orig/triceratops.obj.gz')

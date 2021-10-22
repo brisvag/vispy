@@ -69,7 +69,7 @@ class ScrollingLinesVisual(Visual):
         if (v_index.y - floor(v_index.y) > 0) {
             discard;
         }
-        gl_FragColor = $color;
+        $out_color = $color;
     }
     """
 

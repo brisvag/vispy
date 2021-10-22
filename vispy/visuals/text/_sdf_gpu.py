@@ -53,7 +53,7 @@ void main( void )
   vec4 myzero = vec4(128. / 255., 128. / 255., 0., 0.);  // Zero
   vec4 myinfinity = vec4(0., 0., 0., 0.);                // Infinity
   // Pixels >= 0.5 are objects, others are background
-  gl_FragColor = pixel >= 0.5 ? myzero : myinfinity;
+  $out_color = pixel >= 0.5 ? myzero : myinfinity;
 }
 """
 
@@ -190,7 +190,7 @@ void main( void )
     }
   }
 
-  gl_FragColor = remap_inv(bestseed.xy);
+  $out_color = remap_inv(bestseed.xy);
 }
 """
 
@@ -220,9 +220,9 @@ void main( void )
     vec2 pos_distvec = remap(texture2D(u_pos_texture, v_uv).rgba) / rescale;
     vec2 neg_distvec = remap(texture2D(u_neg_texture, v_uv).rgba) / rescale;
     if (pixel <= 0.5)
-        gl_FragColor = vec4(0.5 - length(pos_distvec));
+        $out_color = vec4(0.5 - length(pos_distvec));
     else
-        gl_FragColor = vec4(0.5 - (shrink - 1.) / 256. + length(neg_distvec));
+        $out_color = vec4(0.5 - (shrink - 1.) / 256. + length(neg_distvec));
 }
 """
 

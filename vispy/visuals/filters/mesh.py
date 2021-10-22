@@ -48,7 +48,7 @@ class TextureFilter(Filter):
         ffunc = Function("""
             void apply_texture() {
                 if ($enabled == 1) {
-                    gl_FragColor *= texture2D($u_texture, $texcoords);
+                    $out_color *= texture2D($u_texture, $texcoords);
                 }
             }
         """)
@@ -118,10 +118,10 @@ class TextureFilter(Filter):
 
 
 shading_vertex_template = """
-varying vec3 v_normal_vec;
-varying vec3 v_light_vec;
-varying vec3 v_eye_vec;
-varying vec4 v_pos_scene;
+out vec3 v_normal_vec;
+out vec3 v_light_vec;
+out vec3 v_eye_vec;
+out vec4 v_pos_scene;
 
 void prepare_shading() {
     vec4 pos_scene = $render2scene(gl_Position);
@@ -153,17 +153,17 @@ void prepare_shading() {
 
 
 shading_fragment_template = """
-varying vec3 v_normal_vec;
-varying vec3 v_light_vec;
-varying vec3 v_eye_vec;
-varying vec4 v_pos_scene;
+in vec3 v_normal_vec;
+in vec3 v_light_vec;
+in vec3 v_eye_vec;
+in vec4 v_pos_scene;
 
 void shade() {
     if ($shading_enabled != 1) {
         return;
     }
 
-    vec3 base_color = gl_FragColor.rgb;
+    vec3 base_color = $out_color.rgb;
     vec4 ambient_coeff = $ambient_coefficient;
     vec4 diffuse_coeff = $diffuse_coefficient;
     vec4 specular_coeff = $specular_coefficient;
@@ -216,7 +216,7 @@ void shade() {
 
     // Blend the base color and combine the illuminations.
     vec3 color = base_color * (ambient + diffuse) + specular;
-    gl_FragColor.rgb = color;
+    $out_color.rgb = color;
 }
 """  # noqa
 
@@ -573,7 +573,7 @@ class ShadingFilter(Filter):
 
 
 wireframe_vertex_template = """
-varying vec3 v_bc;
+out vec3 v_bc;
 
 void prepare_wireframe() {
     v_bc = $bc;
@@ -582,7 +582,7 @@ void prepare_wireframe() {
 
 
 wireframe_fragment_template = """
-varying vec3 v_bc;
+in vec3 v_bc;
 
 void draw_wireframe() {
     if ($enabled != 1) {
@@ -599,17 +599,17 @@ void draw_wireframe() {
             discard;
         }
         // On the edge.
-        gl_FragColor = $color;
-        gl_FragColor.a = opacity;
+        $out_color = $color;
+        $out_color.a = opacity;
     } else if ($faces_only == 1) {
         if (opacity == 1.0) {
             // Inside an edge.
             discard;
         }
         // Inside a triangle.
-        gl_FragColor.a = 1.0 - opacity;
+        $out_color.a = 1.0 - opacity;
     } else {
-        gl_FragColor = mix(gl_FragColor, $color, opacity);
+        $out_color = mix($out_color, $color, opacity);
     }
 
 }

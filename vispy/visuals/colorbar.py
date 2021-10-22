@@ -30,7 +30,7 @@ varying vec2 v_texcoord;
 void main()
 {
     vec4 mapped_color = $color_transform(v_texcoord.x);
-    gl_FragColor = mapped_color;
+    $out_color = mapped_color;
 }
 """  # noqa
 
@@ -42,7 +42,7 @@ void main()
     // we get the texcoords inverted (with respect to the colormap)
     // so let's invert it to make sure that the colorbar renders correctly
     vec4 mapped_color = $color_transform(1.0 - v_texcoord.y);
-    gl_FragColor = mapped_color;
+    $out_color = mapped_color;
 }
 """  # noqa
 

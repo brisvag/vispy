@@ -175,7 +175,7 @@ void main()
         discard;
     }
 
-    gl_FragColor = filled(r, edgewidth, v_antialias, edgecolor);
+    $out_color = filled(r, edgewidth, v_antialias, edgecolor);
 }
 """
 

@@ -64,7 +64,7 @@ void main()
         texcoord = map_local_to_tex(vec4(v_texcoord, 0, 1)).xy;
     }
 
-    gl_FragColor = $color_transform($get_data(texcoord));
+    $out_color = $color_transform($get_data(texcoord));
 }
 """  # noqa
 

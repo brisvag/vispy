@@ -91,7 +91,7 @@ import numpy as np
 from .. import gloo
 from ..util.event import EmitterGroup, Event
 from ..util import logger, Frozen
-from .shaders import StatementList, MultiProgram
+from .shaders import StatementList, MultiProgram, Variable
 from .transforms import TransformSystem
 
 
@@ -341,6 +341,15 @@ class Visual(BaseVisual):
         self._prepare_transforms(self)
         self._filters = []
         self._hooks = {}
+
+        self._out_color = Variable('out vec4 out_color')
+        self.shared_program.frag['out_color'] = self._out_color
+        self._out_normal_depth = Variable('out vec4 out_normal_depth')
+        try:
+            self.shared_program.frag['out_normal_depth'] = self._out_normal_depth
+        except KeyError:
+            pass
+
 
     def set_gl_state(self, preset=None, **kwargs):
         """Define the set of GL state parameters to use when drawing.

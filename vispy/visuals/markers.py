@@ -15,23 +15,23 @@ from .shaders import Function, Variable
 from .visual import Visual
 
 
-vert = """
+vert = """#version 450
 uniform float u_antialias;
 uniform float u_px_scale;
 uniform bool u_scaling;
 uniform bool u_spherical;
 
-attribute vec3 a_position;
-attribute vec4 a_fg_color;
-attribute vec4 a_bg_color;
-attribute float a_edgewidth;
-attribute float a_size;
+in vec3 a_position;
+in vec4 a_fg_color;
+in vec4 a_bg_color;
+in float a_edgewidth;
+in float a_size;
 
-varying vec4 v_fg_color;
-varying vec4 v_bg_color;
-varying float v_edgewidth;
-varying float v_depth_middle;
-varying float v_alias_ratio;
+out vec4 v_fg_color;
+out vec4 v_bg_color;
+out float v_edgewidth;
+out float v_depth_middle;
+out float v_alias_ratio;
 
 float big_float = 1e10; // prevents numerical imprecision
 
@@ -76,7 +76,7 @@ void main (void) {
 """
 
 
-frag = """#version 120
+frag = """#version 450
 uniform vec3 u_light_position;
 uniform vec3 u_light_color;
 uniform float u_light_ambient;
@@ -84,11 +84,11 @@ uniform float u_alpha;
 uniform float u_antialias;
 uniform bool u_spherical;
 
-varying vec4 v_fg_color;
-varying vec4 v_bg_color;
-varying float v_edgewidth;
-varying float v_depth_middle;
-varying float v_alias_ratio;
+in vec4 v_fg_color;
+in vec4 v_bg_color;
+in float v_edgewidth;
+in float v_depth_middle;
+in float v_alias_ratio;
 
 void main()
 {
@@ -157,13 +157,18 @@ void main()
         edgecolor = vec4(edgecolor.rgb * diffuse_color + specular_color, edgecolor.a * u_alpha);
         // TODO: figure out why this 0.5 is needed, despite already having the radius, not diameter
         depth_change = -0.5 * z * v_depth_middle;
+
+        $out_normal_depth.xyz = normal;
+    }
+    else {
+        $out_normal_depth.xyz = vec3(0, 0, 1);  // facing us?
     }
 
     if (d < 0.0)
     {
         // inside the width of the edge
         // (core, out of the transition zone for antialiasing)
-        gl_FragColor = edgecolor;
+        $out_color = edgecolor;
     }
     else if (v_edgewidth == 0.)
     {// no edge
@@ -171,11 +176,11 @@ void main()
         {// outside
             float alpha = 1.0 + r/u_antialias;
             alpha = exp(-alpha*alpha);
-            gl_FragColor = vec4(facecolor.rgb, alpha*facecolor.a);
+            $out_color = vec4(facecolor.rgb, alpha*facecolor.a);
         }
         else
         {// inside
-            gl_FragColor = facecolor;
+            $out_color = facecolor;
         }
     }
     else
@@ -185,15 +190,21 @@ void main()
         if (r > 0.)
         {
             // outer part of the edge: fade out into the background...
-            gl_FragColor = vec4(edgecolor.rgb, alpha*edgecolor.a);
+            $out_color = vec4(edgecolor.rgb, alpha*edgecolor.a);
         }
         else
         {
             // inner part of the edge: fade into the face color
-            gl_FragColor = mix(facecolor, edgecolor, alpha);
+            $out_color = mix(facecolor, edgecolor, alpha);
         }
     }
-    gl_FragDepth = gl_FragCoord.z + depth_change;
+    float z_coord = gl_FragCoord.z + depth_change;
+    gl_FragDepth = z_coord;
+
+    $out_normal_depth.a = z_coord;
+
+    // depth debugging
+    //$out_color = vec4((z_coord - 0.4997) * 800, 0, 0, 1);
 }
 """
 
