@@ -276,9 +276,8 @@ void main() {
         }
     }
 
-    if ( texture_sampled == false ) {
+    if (!texture_sampled)
         discard;
-    }
 
     $after_loop
 
@@ -337,9 +336,8 @@ _RAYCASTING_SETUP_PLANE = """
     out_of_bounds += float(intersection_tex.z > 1);
     out_of_bounds += float(intersection_tex.z < 0);
 
-    if (out_of_bounds > 0) {
+    if (out_of_bounds > 0)
         discard;
-    }
 
 
     // Decide how many steps to take
