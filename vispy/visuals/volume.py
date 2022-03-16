@@ -535,7 +535,7 @@ _ISO_SNIPPETS = dict(
         }
         """,
     after_loop="""
-        if (!surface_found)
+        if (discard_fragment)
             discard;
     """,
 )
