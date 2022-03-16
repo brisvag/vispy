@@ -326,6 +326,7 @@ def test_plane_depth():
         )
 
         # render with grays colormap
+        c.size = (40, 40)  # force size, see #2305
         rendered = c.render()
         left = rendered[20, 10]
         right = rendered[20, 30]
@@ -375,6 +376,7 @@ def test_volume_depth():
         )
 
         # render
+        c.size = (40, 40)  # force size, see #2305
         rendered = c.render()
         reds = np.sum(rendered[:, :, 0])
         greens = np.sum(rendered[:, :, 1])
