@@ -511,7 +511,7 @@ _ISO_SNIPPETS = dict(
         vec4 color3 = vec4(0.0);  // final color
         vec3 dstep = 1.5 / u_shape;  // step to sample derivative
         gl_FragColor = vec4(0.0);
-        bool found = false;
+        bool surface_found = false;
     """,
     in_loop="""
         if (val > u_threshold-0.2) {
@@ -525,7 +525,7 @@ _ISO_SNIPPETS = dict(
 
                     // set the variables for the depth buffer
                     frag_depth_point = iloc * u_shape;
-                    found = true;
+                    surface_found = true;
 
                     iter = nsteps;
                     break;
@@ -535,7 +535,7 @@ _ISO_SNIPPETS = dict(
         }
         """,
     after_loop="""
-        if (!found)
+        if (!surface_found)
             discard;
     """,
 )
