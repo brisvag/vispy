@@ -525,7 +525,7 @@ _ISO_SNIPPETS = dict(
 
                     // set the variables for the depth buffer
                     frag_depth_point = iloc * u_shape;
-                    surface_found = true;
+                    discard_fragment = false;
 
                     iter = nsteps;
                     break;
