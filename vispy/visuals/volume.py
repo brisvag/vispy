@@ -511,7 +511,7 @@ _ISO_SNIPPETS = dict(
         vec4 color3 = vec4(0.0);  // final color
         vec3 dstep = 1.5 / u_shape;  // step to sample derivative
         gl_FragColor = vec4(0.0);
-        bool surface_found = false;
+        bool discard_fragment = true;
     """,
     in_loop="""
         if (val > u_threshold-0.2) {
