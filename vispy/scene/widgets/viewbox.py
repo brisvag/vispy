@@ -10,6 +10,7 @@ import numpy as np
 from .widget import Widget
 from ..subscene import SubScene
 from ..cameras import make_camera, BaseCamera
+from ...geometry import Rect
 from ...visuals.filters import Clipper
 
 
@@ -52,9 +53,15 @@ class ViewBox(Widget):
             name = None
 
         self._scene = SubScene(name=name, parent=self)
+        # clip visuals in the scene
         self._scene._clipper = Clipper()
         self._scene.clip_children = True
         self.transforms.changed.connect(self._update_scene_clipper)
+
+        # clip visuals in the canvas view (overlays, widgets, etc)
+        self._clipper = Clipper()
+        self.clip_children = True
+        self.events.resize.connect(self._update_view_clipper)
 
         # Camera is a helper object that handles scene transformation
         # and user interaction.
@@ -197,3 +204,6 @@ class ViewBox(Widget):
     def _update_scene_clipper(self, event=None):
         tr = self.get_transform('visual', 'framebuffer')
         self._scene._clipper.bounds = tr.map(self.inner_rect)
+
+    def _update_view_clipper(self, event=None):
+        self._clipper.bounds = (0, 0, *self.size)
