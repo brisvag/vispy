@@ -10,7 +10,6 @@ import numpy as np
 from .widget import Widget
 from ..subscene import SubScene
 from ..cameras import make_camera, BaseCamera
-from ...geometry import Rect
 from ...visuals.filters import Clipper
 
 
