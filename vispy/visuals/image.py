@@ -705,7 +705,6 @@ class ImageVisual(Visual):
         if self._need_colortransform_update:
             prg = view.view_program
             self.shared_program.frag['color_transform'] = self._build_color_transform()
-            print(1)
             self._need_colortransform_update = False
             prg['texture2D_LUT'] = self.cmap.texture_lut()
 
