@@ -11,7 +11,7 @@ import re
 re_version_pragma = r'#version\s+(\d+)(.*)?(//.*)?'
 
 re_type = r'(?:void|int|float|vec2|vec3|vec4|mat2|mat3|mat4|\
-            sampler1D|sampler2D|sampler3D)'
+            sampler1D|sampler2D|sampler3D|bool)'
 re_identifier = r'(?:[a-zA-Z_][\w_]*)'
 
 # variable qualifiers

@@ -70,6 +70,16 @@ void main()
 }
 """  # noqa
 
+_SAFE_IS_NAN = """
+    bool safe_is_nan(float val) {
+        // is_nan is not available in all glsl versions.
+        // A NaN test against 0.0 is folded away by compilers that assume no
+        // NaN (e.g. Apple's GL-on-Metal). gl_DepthRange.far is a uniform the
+        // compiler cannot see, and is >= 0, so this is false for any number.
+        return !(val <= gl_DepthRange.far || -gl_DepthRange.far <= val) ? true : false;
+    }
+"""
+
 _INTERPOLATION_TEMPLATE = """
     #include "misc/spatial-filters.frag"
     vec4 texture_lookup_filtered(vec2 texcoord) {
@@ -92,7 +102,7 @@ _TEXTURE_LOOKUP = """
 _APPLY_CLIM_FLOAT = """
     float apply_clim(float data) {
         // pass through NaN values to get handled by the colormap
-        if (!(data <= 0.0 || 0.0 <= data)) return data;
+        if ($safe_is_nan(data)) return data;
 
         data = clamp(data, min($clim.x, $clim.y), max($clim.x, $clim.y));
         data = (data - $clim.x) / ($clim.y - $clim.x);
@@ -102,11 +112,10 @@ _APPLY_CLIM_FLOAT = """
 _APPLY_CLIM = """
     vec4 apply_clim(vec4 color) {
         // Handle NaN values (clamp them to the minimum value)
-        // http://stackoverflow.com/questions/11810158/how-to-deal-with-nan-or-inf-in-opengl-es-2-0-shaders
-        color.r = !(color.r <= 0.0 || 0.0 <= color.r) ? min($clim.x, $clim.y) : color.r;
-        color.g = !(color.g <= 0.0 || 0.0 <= color.g) ? min($clim.x, $clim.y) : color.g;
-        color.b = !(color.b <= 0.0 || 0.0 <= color.b) ? min($clim.x, $clim.y) : color.b;
-        color.a = !(color.a <= 0.0 || 0.0 <= color.a) ? 0 : color.a;
+        color.r = $safe_is_nan(color.r) ? min($clim.x, $clim.y) : color.r;
+        color.g = $safe_is_nan(color.g) ? min($clim.x, $clim.y) : color.g;
+        color.b = $safe_is_nan(color.b) ? min($clim.x, $clim.y) : color.b;
+        color.a = $safe_is_nan(color.a) ? 0 : color.a;
         color.rgb = clamp(color.rgb, min($clim.x, $clim.y), max($clim.x, $clim.y));
         color.rgb = (color.rgb - $clim.x) / ($clim.y - $clim.x);
         return max(color, 0.0);
@@ -116,7 +125,7 @@ _APPLY_CLIM = """
 _APPLY_GAMMA_FLOAT = """
     float apply_gamma(float data) {
         // pass through NaN values to get handled by the colormap
-        if (!(data <= 0.0 || 0.0 <= data)) return data;
+        if $safe_is_nan(data) return data;
 
         return pow(data, $gamma);
     }"""
@@ -654,7 +663,9 @@ class ImageVisual(Visual):
         if self._data.ndim == 2 or self._data.shape[2] == 1:
             # luminance data
             fclim = Function(self._func_templates['clim_float'])
+            fclim['safe_is_nan'] = Function(_SAFE_IS_NAN)
             fgamma = Function(self._func_templates['gamma_float'])
+            fgamma['safe_is_nan'] = Function(_SAFE_IS_NAN)
             # NOTE: red_to_luminance only uses the red component, fancy internalformats
             #   may need to use the other components or a different function chain
             fun = FunctionChain(
@@ -663,6 +674,7 @@ class ImageVisual(Visual):
         else:
             # RGB/A image data (no colormap)
             fclim = Function(self._func_templates['clim'])
+            fclim['safe_is_nan'] = Function(_SAFE_IS_NAN)
             fgamma = Function(self._func_templates['gamma'])
             fun = FunctionChain(None, [Function(self._func_templates['null_color_transform']), fclim, fgamma])
         fclim['clim'] = self._texture.clim_normalized
@@ -693,6 +705,7 @@ class ImageVisual(Visual):
         if self._need_colortransform_update:
             prg = view.view_program
             self.shared_program.frag['color_transform'] = self._build_color_transform()
+            print(1)
             self._need_colortransform_update = False
             prg['texture2D_LUT'] = self.cmap.texture_lut()
 

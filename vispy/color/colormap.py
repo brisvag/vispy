@@ -279,8 +279,11 @@ class BaseColormap(object):
         r, g, b, a = self.bad_color.rgba
 
         bad_color_glsl = f"""
-        // Map NaN to bad_color
-        if (!(t <= 0.0 || 0.0 <= t)) {{
+        // is_nan is not available in all glsl versions.
+        // A NaN test against 0.0 is folded away by compilers that assume no
+        // NaN (e.g. Apple's GL-on-Metal). gl_DepthRange.far is a uniform the
+        // compiler cannot see, and is >= 0, so this is false for any number.
+        if !(t <= gl_DepthRange.far || -gl_DepthRange.far <= t) {{
             return vec4({r:.3f}, {g:.3f}, {b:.3f}, {a:.3f});
         }}"""
 
